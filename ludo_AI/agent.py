@@ -1,7 +1,73 @@
+# STATE DEFINITIONS
+NUM_STATES = 12
+STATE_SAFE_GOAL_ZONE = 0    # Piece is in goal zone
+STATE_SAFE_GLOBE = 1        # Piece is on a globe
+STATE_SAFE_STACKED = 2      # Piece is stacked with other pieces
+STATE_CAN_KILL = 3          # Piece can kill other piece
+STATE_WILL_BE_KILLED = 4    # Piece will be killed by moving
+STATE_MOVE_TO_SAFETY = 5    # Piece can move out of danger zone ex more than 6 away from another piece, to a globe, to another friendly piece, to goal zone
+STATE_MOVE_TO_STAR = 6      # Piece can move to a star
+STATE_MOVE_TO_DANGER_ZONE = 7   # Piece will move in front of an enemy
+STATE_MOVE_TO_GOAL = 8      # Piece can reach the goal
+STATE_IN_DANGER_ZONE = 9    # Piece is in front of an enemy
+STATE_IN_HOME = 10          # Piece is at home
+STATE_ON_ENEMY_GLOBE = 11
+#STATE_CHASE_ENEMY = 11      # Piece can chase enemy, enemy is less than 6 away
+#STATE_ON_ENEMY_GLOBE
+
+# GAME DEFINITIONS
+
+TOTAL_NUMBER_OF_TILES = 58
+DICE_MOVE_OUT_OF_HOME = 6
+NO_ENEMY = -1
+
+TILE_FREE = 0
+TILE_HOME = 1
+TILE_START = 2
+TILE_GLOBE = 3
+TILE_GOAL_AREA = 4
+TILE_STAR = 5
+TILE_GOAL = 6
+TILE_ENEMY_1_GLOB = 7
+TILE_ENEMY_2_GLOB = 8
+TILE_ENEMY_3_GLOB = 9
+LIST_TILE_ENEMY_GLOBS = [TILE_ENEMY_1_GLOB, TILE_ENEMY_2_GLOB, TILE_ENEMY_3_GLOB]
+
+NULL_POS = -1
+HOME_INDEX = 0
+START_INDEX = 1
+STAR_INDEXS = [5, 12, 18, 25, 31, 38, 44, 51]
+
+HOME_AREA_INDEXS = [52, 53, 54, 55, 56]
+GOAL_INDEX = 57
+GLOB_INDEXS = [9, 22, 35, 48]
+ENEMY_1_GLOB_INDX = 14
+ENEMY_2_GLOB_INDX = 27
+ENEMY_3_GLOB_INDX = 40
+STAR_AT_GOAL_AREAL_INDX = STAR_INDEXS[-1]
+
+BOARD_TILES = np.full(TOTAL_NUMBER_OF_TILES, TILE_FREE)
+BOARD_TILES[HOME_INDEX] = TILE_HOME
+BOARD_TILES[START_INDEX] = TILE_START
+BOARD_TILES[STAR_INDEXS] = TILE_STAR
+BOARD_TILES[GLOB_INDEXS] = TILE_GLOBE
+BOARD_TILES[HOME_AREA_INDEXS] = TILE_GOAL_AREA
+BOARD_TILES[GOAL_INDEX] = TILE_GOAL
+BOARD_TILES[ENEMY_1_GLOB_INDX] = TILE_ENEMY_1_GLOB
+BOARD_TILES[ENEMY_2_GLOB_INDX] = TILE_ENEMY_2_GLOB
+BOARD_TILES[ENEMY_3_GLOB_INDX] = TILE_ENEMY_3_GLOB
+
+ENEMY_1_INDX_AT_HOME = 40  # HOME_AREAL_INDEXS[0] - 6 - i * 13 # i = 1
+ENEMY_2_INDX_AT_HOME = 27  # HOME_AREAL_INDEXS[0] - 6 - i * 13 # i = 2
+ENEMY_3_INDX_AT_HOME = 14  # HOME_AREAL_INDEXS[0] - 6 - i * 13 # i = 3
+
+
+
 import numpy as np
 class Agent:
     def __init__(self):
         self.chromosome = []
+        state = []
 
 
     def set_chromosome(self, chromosome):
@@ -14,4 +80,42 @@ class Agent:
         # Temp return ranom numbber between 1 and 4
         return np.random.randint(0, len(move_pieces))
     
-    def calc_state(self, obs, player_i):
+    def calc_state(self, dice, move_pieces, player_pieces, enemy_pieces, player_i):
+        # Calc state of moveable pieces
+        for i in len(move_pieces):
+            tempState = np.full(NUM_STATES, 0)
+
+            piecePos = player_pieces[move_pieces[i]]
+            pieceNextPos = piecePos + dice
+            
+            # Check for overshoot
+            if pieceNextPos > GOAL_INDEX:
+                overshoot = pieceNextPos - GOAL_INDEX
+                pieceNextPos = pieceNextPos - overshoot
+
+            # Check if piece is in GOAL zone
+            if BOARD_TILES[piecePos] == TILE_GOAL_AREA:
+                tempState[STATE_SAFE_GOAL_ZONE] = 1
+            
+            # Check if piece is on a globe
+            if BOARD_TILES[piecePos] == TILE_GLOBE:
+                tempState[STATE_SAFE_GLOBE] = 1
+
+            # Check if piece is stacked with other pieces
+            if player_pieces.count(piecePos) > 1:
+                tempState[STATE_SAFE_STACKED] = 1
+            
+            # Check if piece can kill other piece
+            if BOARD_TILES[pieceNextPos] in enemy_pieces:
+                # Check if enemy piece is on a globe
+                if BOARD_TILES[pieceNextPos] == TILE_GLOBE or BOARD_TILES[pieceNextPos] in LIST_TILE_ENEMY_GLOBS:
+                    if pieceNextPos in enemy_pieces:
+                        tempState[STATE_WILL_BE_KILLED] = 1
+                
+                # Check if enemy is double staced on next position
+                if enemy_pieces.count(pieceNextPos) > 1:
+                    tempState[STATE_WILL_BE_KILLED] = 1
+                
+
+                
+                
