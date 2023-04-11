@@ -1,18 +1,19 @@
 # STATE DEFINITIONS
 NUM_STATES = 12
-STATE_SAFE_GOAL_ZONE = 0    # Piece is in goal zone
-STATE_SAFE_GLOBE = 1        # Piece is on a globe
-STATE_SAFE_STACKED = 2      # Piece is stacked with other pieces
-STATE_CAN_KILL = 3          # Piece can kill other piece
-STATE_WILL_BE_KILLED = 4    # Piece will be killed by moving
-STATE_MOVE_TO_SAFETY = 5    # Piece can move out of danger zone ex more than 6 away from another piece, to a globe, to another friendly piece, to goal zone
-STATE_MOVE_TO_STAR = 6      # Piece can move to a star
-STATE_MOVE_TO_DANGER_ZONE = 7   # Piece will move in front of an enemy
-STATE_MOVE_TO_GOAL = 8      # Piece can reach the goal
-STATE_IN_DANGER_ZONE = 9    # Piece is in front of an enemy
-STATE_IN_HOME = 10          # Piece is at home
-STATE_ON_ENEMY_GLOBE = 11
-#STATE_CHASE_ENEMY = 11      # Piece can chase enemy, enemy is less than 6 away
+STATE_SAFE_GOAL_ZONE = 0        # Piece is in goal zone
+STATE_SAFE_GLOBE = 1            # Piece is on a globe
+STATE_SAFE_STACKED = 2          # Piece is stacked with other pieces
+STATE_SAFE_DISTANCCE = 3        # Piece is more than 6 away from another piece
+STATE_CAN_KILL = 4              # Piece can kill other piece
+STATE_WILL_BE_KILLED = 5        # Piece will be killed by moving
+STATE_MOVE_TO_SAFETY = 6        # Piece can move out of danger zone ex more than 6 away from another piece, to a globe, to another friendly piece, to goal zone
+STATE_MOVE_TO_STAR = 7          # Piece can move to a star
+STATE_MOVE_TO_DANGER_ZONE = 8   # Piece will move in front of an enemy
+STATE_MOVE_TO_GOAL = 9          # Piece can reach the goal
+STATE_IN_DANGER_ZONE = 10       # Piece is in front of an enemy
+STATE_IN_HOME = 11              # Piece is at home
+STATE_ON_ENEMY_GLOBE = 12       # Piece is on an emenyy globe
+#STATE_CHASE_ENEMY = 11         # Piece can chase enemy, enemy is less than 6 away
 #STATE_ON_ENEMY_GLOBE
 
 # GAME DEFINITIONS
@@ -113,9 +114,12 @@ class Agent:
                         tempState[STATE_WILL_BE_KILLED] = 1
                 
                 # Check if enemy is double staced on next position
-                if enemy_pieces.count(pieceNextPos) > 1:
+                elif enemy_pieces.count(pieceNextPos) > 1:
                     tempState[STATE_WILL_BE_KILLED] = 1
                 
+                else:
+                    tempState[STATE_CAN_KILL]
 
-                
+            # Check if piece 
+
                 
