@@ -1,28 +1,38 @@
-import ludopy
 import numpy as np
 import cv2
 from agent import Agent
 from population import Population
+import time
+import cProfile
+
+numGames = 200 
+numEnemys = 3 
+numAgents = 20 
+mutationRate = 0.05 
+mutationSize = 0.20 
+elitism = 0.1 
+numGenerations = 1000
 
 if __name__ == '__main__':
     print("Starting Ludo AI")
 
-    p = Population(10, 0.05, 0.5, 0.1)
-    g = ludopy.Game()
-    a = Agent()
-    there_is_a_winner = False
+    # Create population to train
+    p = Population(numGames, numEnemys, numAgents, mutationRate, mutationSize, elitism, numGenerations)
+    
+    # start timer
+    start = time.time()
 
-    while not there_is_a_winner:
-        (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
-        
+    # Train population
+    p.train()
 
-        if len(move_pieces):
-            a.calc_state(dice, move_pieces, player_pieces, enemy_pieces)
-            piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
-        else:
-            piece_to_move = -1
+    # end timer
+    end = time.time()
 
-        _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
+    # print time
+    print(f"Finished training agents in: {round(end - start,2)} seconds")
 
+    # plot ftiness over
+    p.plotFitness("results.pdf")
 
+    
     print("End of script")

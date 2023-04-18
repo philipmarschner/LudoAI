@@ -70,6 +70,8 @@ ENEMY_3_INDX_AT_HOME = 14  # HOME_AREAL_INDEXS[0] - 6 - i * 13 # i = 3
 class Agent:
     def __init__(self):
         self.chromosome = []
+        self.gamesWon = 0
+        self.fitness = 0
 
     def set_chromosome(self, chromosome):
         self.chromosome = chromosome
@@ -161,6 +163,7 @@ class Agent:
             
             # add tempsate to state
             state[i] = tempState
+        return state
 
     def calc_NN_output(self, state):
         # Calc NN output
@@ -170,7 +173,7 @@ class Agent:
     def get_best_action(self, dice, move_pieces, player_pieces, enemy_pieces):
         # Calc state of moveable pieces
         state = self.calc_state(dice, move_pieces, player_pieces, enemy_pieces)
-        
+
         output = np.full(len(move_pieces), 0)
 
         # Calc NN output

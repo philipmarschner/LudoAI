@@ -10,7 +10,7 @@ class Game:
     The Game. This class is the only needed class for normal use
     """
 
-    def __init__(self, ghost_players=None):
+    def __init__(self, ghost_players=None, saveHistory=False):
         """
         Maked a game with 4 players
 
@@ -27,6 +27,7 @@ class Game:
             3: [0, 1, 2]
         }
         self.ghost_players = ghost_players
+        self.saveHistory = saveHistory
 
     def _dice_generator(self):
         """
@@ -155,7 +156,8 @@ class Game:
         obs = self._gen_observation(self.current_player, roll_dice=True)
 
         # Add the bord and dice before the move to the history
-        self._add_to_hist()
+        if self.hist:
+            self._add_to_hist() # Add the state of the game to the history
         return obs, self.current_player
 
     def _count_player(self):
@@ -211,7 +213,8 @@ class Game:
                 self.game_winners.append(self.current_player)
 
         # Add the bord after the move to the history
-        self._add_to_hist()
+        if self.hist:
+            self._add_to_hist()
 
         next_player = True
         # In the first round the players has 3 attempts to get a piece out of home
@@ -230,13 +233,16 @@ class Game:
         self.observation_pending = False
 
         # Get the environment after the move
-        after_obs = self._gen_observation(self.current_player, roll_dice=False)
+        #after_obs = self._gen_observation(self.current_player, roll_dice=False)
+
+        # Check if there is a winner
+        there_is_a_winner = any([p.player_winner() for p in self.players])
 
         # If it is the next players turn then change current_player
         if next_player:
             self._count_player()
 
-        return after_obs
+        return there_is_a_winner
 
     def get_winner_of_game(self):
         """
