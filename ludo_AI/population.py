@@ -6,10 +6,11 @@ import ludopy
 import time
 import multiprocessing as mp
 import matplotlib.pyplot as plt
+import csv
+import math
 
 rng = np.random.default_rng(12345)
 
-# Inspired by https://github.com/AugustMader/Genetic-algorithm-Ludo-game-in-Python/blob/main/geneticAlgorithm/geneticAlgorithm.py
 
 class Population:
     def __init__(self, numGames, numEnemys, numAgents, mutationRate, mutationSize, elitism, numGenerations):
@@ -22,6 +23,9 @@ class Population:
         self.elitism = elitism # Percentage of agents that will be copied to next generation
         self.numGenerations = numGenerations # Number of generations to run
         self.fitness = [] # Fitness of each agent
+
+
+
     
     def generateChromosome(self):
         # Generate chromosome
@@ -72,25 +76,13 @@ class Population:
     def evaluate(self):
         # Multithreading is used to speed up the process
         # https://analyticsindiamag.com/run-python-code-in-parallel-using-multiprocessing/
-
-        start = time.perf_counter()
-
         pool = mp.Pool(processes=self.numAgents)
         wins = pool.map(self.playGame, self.agents)
         pool.close()
         pool.join()
-        end = time.perf_counter()
-        print(f"    Finished evaluating agents in: {round(end - start,2)} seconds")
-
 
         for i in range(len(self.agents)):
             self.agents[i].gamesWon = wins[i] 
-
-        
-
-        
-        
-        
     
     def computeFitness(self):
         # Compute fitness of agents
@@ -98,8 +90,6 @@ class Population:
         for agent in self.agents:
             agent.fitness = agent.gamesWon/self.numGames
             fitness.append(agent.fitness)
-
-        print("    Fitness: ", fitness)
         self.fitness.append(fitness)
 
     def select(self):
@@ -182,28 +172,56 @@ class Population:
             mutatedAgents.append(agent)
         return mutatedAgents
 
-
     def train(self):
         # Initialize population
         self.initializePopulation()
         
-        for i in range(self.numGenerations):
-            print("Generation: ", i+1, "/", self.numGenerations)
-            # Evaluate agents
-            self.evaluate()
+        # Setup CSV files for datarecording
+        #numGames, numEnemys, numAgents, mutationRate, mutationSize, elitism, numGenerations
+        filename = "agn_" + str(self.numAgents)
+        filename += "_gms_" + str(self.numGames)
+        filename += "_gen_" + str(self.numGenerations)
+        filename += "_mut_" + str(self.mutationRate)
+        filename += "_mutS_" + str(self.mutationSize)
+        filename += "_el_" + str(self.elitism)
+        filename += ".csv"
+        with open(filename, 'w', newline='') as file:
+            writer = csv.writer(file, delimiter=',')   
 
-            # Compute fitness
-            self.computeFitness()
+            for i in range(self.numGenerations):
+                loop_start = time.perf_counter()
+                print("Generation: ", i+1, "/", self.numGenerations)
+                # Evaluate agents
+                self.evaluate()
 
-            # Select agents for next generation
-            parents = self.select()
+                # Compute fitness
+                self.computeFitness()
 
-            # Crossover agents
-            nextGen = self.crossover(parents)
+                # Write data to csv file
+                data = []
+                data.append(i)
+                for j in range(self.numAgents):
+                    data.append(self.agents[j].fitness)
+                for j in range(self.numAgents):
+                    temp = self.agents[j].chromosome.tolist()
+                    for k in range(len(temp)):
+                        data.append(temp[k])
+                writer.writerow(data)
+                file.flush()
 
-            # Mutate agents
-            self.agents = self.mutate(nextGen)
-    
+                # Select agents for next generation
+                parents = self.select()
+
+                # Crossover agents
+                nextGen = self.crossover(parents)
+
+                # Mutate agents
+                self.agents = self.mutate(nextGen)
+                loop_end = time.perf_counter()
+                print(f"    Max fitness: {max(self.fitness[i])}")
+                print(f"    Average fitness: {sum(self.fitness[i])/len(self.fitness[i])}")
+                print(f"    Estimated time left: h ", math.floor((self.numGenerations-i)*(loop_end - loop_start)/3600), " m ", math.floor((self.numGenerations-i)*(loop_end - loop_start)%3600.0/60), " s ", round((self.numGenerations-i)*(loop_end - loop_start)%60.0,2))
+
     def plotFitness(self, imgPath):
         # Plot max and average fitness of each generation
         maxFitness = []
