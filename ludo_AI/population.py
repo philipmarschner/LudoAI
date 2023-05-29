@@ -38,6 +38,11 @@ class Population:
             tempAgent.set_chromosome(self.generateChromosome())
             self.agents.append(tempAgent)
 
+    def setChromosome(self, playerid, chromosome):
+        if len(self.agents) == 0:
+            self.initializePopulation()
+        self.agents[playerid].set_chromosome(chromosome)
+
     def playGame(self, agent):
         # Evaluate agents by playing numGames games
         if self.numEnemys not in [1, 3]:
@@ -220,7 +225,46 @@ class Population:
                 loop_end = time.perf_counter()
                 print(f"    Max fitness: {max(self.fitness[i])}")
                 print(f"    Average fitness: {sum(self.fitness[i])/len(self.fitness[i])}")
+                print(f"    Time: {round(loop_end - loop_start,2)}")
                 print(f"    Estimated time left: h ", math.floor((self.numGenerations-i)*(loop_end - loop_start)/3600), " m ", math.floor((self.numGenerations-i)*(loop_end - loop_start)%3600.0/60), " s ", round((self.numGenerations-i)*(loop_end - loop_start)%60.0,2))
+
+    def play(self,agent):
+        # Evaluate agents by playing numGames games
+        if self.numEnemys not in [1, 3]:
+            raise ValueError("Number of enemys must be 1 or 3")
+        
+        if self.numEnemys == 1:
+            g= ludopy.Game([1,3])
+        else:
+            g = ludopy.Game()
+        score = np.zeros(self.numGames)
+        agent.gamesWon = 0
+        for i in range(self.numGames):
+            start = time.perf_counter()
+            there_is_a_winner = False
+
+            while not there_is_a_winner:
+                (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
+
+                if len(move_pieces):
+                    if player_i == 0:
+                        piece_to_move = move_pieces[agent.get_best_action(dice, move_pieces, player_pieces, enemy_pieces)]
+                        win = 1
+                    else:
+                        piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
+                        win = 0
+                else:
+                    piece_to_move = -1
+
+                there_is_a_winner = g.answer_observation(piece_to_move)
+            end = time.perf_counter()
+            agent.gamesWon += win
+            score[i] = agent.gamesWon
+            g.reset()
+            if i%50 == 0:
+                print("Game: ", i, " Time: ", round(end-start,2), " Games won: ", agent.gamesWon)
+
+        return agent.gamesWon, score
 
     def plotFitness(self, imgPath):
         # Plot max and average fitness of each generation
