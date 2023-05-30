@@ -3,7 +3,7 @@
 This is an implementation of genetic algoriths for playing the game LUDO in python, based on the ludoPy packages.
 https://github.com/SimonLBSoerensen/LUDOpy
 
-The population class handles the evolutionary computation, it is used to generate a populations of the agent class, evaluate the population for a set amount of games, compute the fitness (win rate), perform selection, cross-over and mutation, before replacing the current generation and start over with a, hopefully, improved new generation.
+My code is found in the ludo_AI folder. The population class handles the evolutionary computation, it is used to generate a populations of the agent class, evaluate the population for a set amount of games, compute the fitness (win rate), perform selection, cross-over and mutation, before replacing the current generation and start over with a, hopefully, improved new generation.
 
 # Examples
 ## Evaluate my best player against random/your player:
